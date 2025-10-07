@@ -20,9 +20,14 @@ def distinct_words(corpus):
             num_corpus_words (integer): number of distinct words across the corpus
     """
     corpus_words = []
-    num_corpus_words = 0
 
     # ### START CODE HERE ###
+    for document in corpus:
+        for text in document:
+            if text not in corpus_words:
+                corpus_words.append(text)
+    corpus_words = sorted(corpus_words)
+    num_corpus_words = len(corpus_words)
     # ### END CODE HERE ###
 
     return corpus_words, num_corpus_words
@@ -46,11 +51,22 @@ def compute_co_occurrence_matrix(corpus, window_size=4):
             word2Ind (dict): dictionary that maps word to index (i.e. row/column number) for matrix M.
     """
     words, num_words = distinct_words(corpus)
-    M = None
     word2Ind = {}
+    for index, key in enumerate(words):
+        word2Ind.update({key: index})
+    size = len(words)
+    M = np.zeros((size, size))
+    for document in corpus:
+        for text_index, text in enumerate(document):
+            for offset in range(-window_size, window_size + 1):
+                if offset is not 0:
+                    j = text_index + offset
+                    if 0 <= j < len(document):
+                        co_occurred_text = document[j]
+                        co_occurred_text_in_word_index = word2Ind.get(co_occurred_text)
+                        text_in_word_index = word2Ind.get(text)
+                        M[text_in_word_index][co_occurred_text_in_word_index] += 1
 
-    # ### START CODE HERE ###
-    # ### END CODE HERE ###
 
     return M, word2Ind
 
@@ -71,6 +87,8 @@ def reduce_to_k_dim(M, k=2):
     M_reduced = None
     print("Running Truncated SVD over %i words..." % (M.shape[0]))
 
+    svd = TruncatedSVD(n_components=k, n_iter=n_iter)
+    M_reduced = svd.fit_transform(M)
     # ### START CODE HERE ###
     # ### END CODE HERE ###
 
