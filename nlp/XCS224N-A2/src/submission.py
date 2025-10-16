@@ -27,6 +27,7 @@ def sigmoid(x):
   """
 
   ### START CODE HERE
+  s = 1 / (1 + np.exp(-x))
   ### END CODE HERE
 
   return s
@@ -66,6 +67,21 @@ def naive_softmax_loss_and_gradient(center_word_vec,outside_word_idx,outside_vec
   ### to integer overflow.
   
   ### START CODE HERE
+  scores = np.dot(outside_vectors, center_word_vec)
+  P = softmax(scores)
+  print("loss", P)
+  loss = -np.log(P[outside_word_idx])
+  print("died here2")
+  y_hat = P
+  y = np.zeros_like(y_hat)
+  print("====== size === ", y_hat.shape, y.shape, outside_word_idx)
+
+  y[outside_word_idx] = 1
+  print("crashed", outside_vectors.shape, (y_hat - y).shape)
+  grad_center_vec = np.dot(np.transpose(outside_vectors), (y_hat - y)) # outside_vectors (12, 3),  y_hat - y shape is 12,_
+  print("crashed222", center_word_vec.shape, (y_hat - y).shape)
+
+  grad_outside_vecs = np.outer(y_hat - y, center_word_vec)  # center_word_vec.shape = 3, num of words is 12
   ### END CODE HERE
 
   return loss, grad_center_vec, grad_outside_vecs
@@ -143,6 +159,21 @@ def skipgram(current_center_word, outside_words, word2ind, center_word_vectors, 
   grad_outside_vectors = np.zeros(outside_vectors.shape)
 
   ### START CODE HERE
+  center_word_idx = word2ind.get(current_center_word)
+  center_word_vec = center_word_vectors[center_word_idx]
+  print("center word vec", center_word_vec.shape) # shape (3, )
+  for outside_word in outside_words:
+    outside_word_idx = word2ind.get(outside_word)
+    loss_current, gradc, grado = naive_softmax_loss_and_gradient(center_word_vec,outside_word_idx,outside_vectors,dataset)
+    print("==== grado", grado.shape)  # (12, 3)
+    loss += loss_current
+    print("===== center word vecs", grad_center_vecs.shape, grad_center_vecs[center_word_idx, :].shape) # 12, 3  # 3, 1
+    grad_center_vecs[center_word_idx, :] += gradc
+
+    print("center word vecs", grad_center_vecs.shape, grad_outside_vectors.shape)
+    grad_outside_vectors += grado
+    print("here")
+
   ### END CODE HERE
 
   return loss, grad_center_vecs, grad_outside_vectors
